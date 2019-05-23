@@ -106,17 +106,22 @@
 
 ### vagrant-ceph Rook deployment
 
-+ `cd SUSE-rook*/cluster/examples/kubernetes/ceph/`
-+ `kubectl create -f common.yaml -f psp.yaml -f operator.yaml`
-+ `kubectl create -f cluster.yaml -f toolbox.yaml`
-+ `kubectl -n rook-ceph get pod`
+admin#
+```bash
+kubectl create -f common.yaml -f psp.yaml -f operator.yaml
+
+kubectl create -f cluster.yaml -f toolbox.yaml
+
+kubectl -n rook-ceph get pod
+
+```
 
 --
 
 ### vagrant-ceph Rook deploys Ceph cluster
 
-```
-# kubectl -n rook-ceph exec $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') -- ceph -s
+```bash
+kubectl -n rook-ceph exec $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools" -o jsonpath='{.items[0].metadata.name}') -- ceph -s
   cluster:
     id:     3d3eb9ab-7416-474d-8e28-fe673f23bd3e
     health: HEALTH_OK
@@ -137,11 +142,11 @@
 
 ### vagrant-ceph Rook defaults
 
-+ by default it is _tiny_ cluster from 3 nodes
++ by default it is a _tiny_ cluster from 3 nodes
   + check _Vagrant_ file and _config.yml_ for
-+  Vagrant changes default containers in yaml to
-  + `image: registry.opensuse.org/filesystems/ceph/images/rook/ceph:latest` in _operator.yaml_
-  + `image: registry.opensuse.org/filesystems/ceph/images/ceph:latest` in _cluster.yaml_
++  Vagrant changes default containers in yaml (image: key) to
+  + _registry.opensuse.org/filesystems/ceph/images/rook/ceph:latest_
+  + _registry.opensuse.org/filesystems/ceph/images/ceph:latest_
 + [SUSE Rook fork](http://github.com/suse/rook) is at _github.com/suse/rook_ and _suse-master_ branch
 
 ---
@@ -149,9 +154,69 @@
 ## CI cluster on Openstack
 
 + Terraform, Heat Orchestration Template, and etc
-+ Heat is not supported on all Cloud instances
++ Heat is supported not on all Cloud instances
 + HOT approach has less tools in the middle so less failures and easier to analyze them
 + Templates examples could be found [here](https://github.com/denisok/ceph-kubic-stack)
+
+--
+
+### Creating k8s cluster on Openstack
+
+host#
+```bash
+openstack stack create -t ./ceph-kubic-stack.yaml -e ./ceph-kubic-environment.yaml --parameter keypair=key--wait ceph-kubic
+
+MasterIP=$(openstack stack output show ceph-kubic master-floating-network-ip -c output_value -f value)
+```
+master#
+```bash
+kubeadm init --cri-socket=/var/run/crio/crio.sock --pod-network-cidr=10.244.0.0/16
+
+mkdir -p $HOME/.kube; cp -i /etc/kubernetes/admin.conf $HOME/.kube/config; chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://0y.at/kubicflannel
+ubectlJoin=$(kubeadm token create --print-join-command)
+
+ssh nodes $KubectlJoin
+```
+
+--
+
+### Rook deployment
+
+master# 
+```bash
+cd rook/cluster/examples/kubernetes/ceph/
+
+kubectl create -f common.yaml -f psp.yaml
+
+kubectl get crd | grep cephclusters
+cephclusters.ceph.rook.io           2019-05-23T15:15:14Z
+
+kubectl -n rook-ceph get cephcluster | grep Created
+kubectl -n rook-ceph get cephcluster | grep HEALTH_OK
+
+NAME        DATADIRHOSTPATH        MONCOUNT AGE STATE     HEALTH
+rook-ceph   /home/ses/var/lib/rook   3      10m Created   HEALTH_OK
+```
+
+--
+
+### Gathering info and shutdown
+
+master#
+```bash
+kubectl -n rook-ceph get pods
+kubectl -n rook-ceph describe pods
+kubectl -n rook-ceph logs -lapp=rook-ceph-operator
+kubectl -n rook-ceph logs -lapp=rook-ceph-...
+
+cp -R /var/log/containers/* ...
+```
+host#
+```bash
+openstack stack delete --yes --wait ceph-kubic
+```
 
 ---
 
