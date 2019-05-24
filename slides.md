@@ -168,7 +168,7 @@ kubectl -n rook-ceph exec $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools
 +  Vagrant changes default containers in yaml (image: key) to
   + ``registry.opensuse.org/filesystems/ceph/images/rook/ceph:latest``
   + ``registry.opensuse.org/filesystems/ceph/images/ceph:latest``
-+ [SUSE Rook fork](http://github.com/suse/rook) is at ``github.com/suse/rook_ and _suse-master`` branch
++ [SUSE Rook fork](http://github.com/suse/rook) is at ``github.com/suse/rook`` and ``suse-master`` branch
 
 ---
 
