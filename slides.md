@@ -1,9 +1,12 @@
 ## Ceph is a distributed storage system
 
 + designed for scalability, reliability and performance
-+ can be run on commodity servers in a common network like Ethernet
++ can be run on commodity servers in a common network
 + scales up well to thousands of servers
-+ automates management tasks such as data distribution and redistribution, data replication, failure detection and recovery
++ automates management tasks such as
+  + data distribution and redistribution
+  + data replication
+  + failure detection and recovery
 + both self-healing and self-managing
 
 --
@@ -21,6 +24,16 @@
 ---
 
 ## [rook.io](https://rook.io)
+
++ Rook is an open source cloud-native storage orchestrator that turns storage software into the storage services that are
+  + self-managing
+  + self-scaling
+  + self-healing
++ It does this by automating 
+  + deployment, bootstrapping, configuration, provisioning, scaling, upgrading, migration, disaster recovery, monitoring, and resource management. 
+
+--
+
 
 ![Design](img/kubernetes.png)
 
@@ -57,7 +70,7 @@
 
 --
 
-### openSUSE Ceph containers
+### openSUSE Ceph containers process
 
 + Process plan is to follow [openSUSE Building derived containers](https://en.opensuse.org/Building_derived_containers)
   + submit containers from [filesystems:ceph](https://build.opensuse.org/project/show/filesystems:ceph) to openSUSE:Factory
@@ -69,7 +82,7 @@
 
 + [vagrant-ceph](https://github.com/openSUSE/vagrant-ceph) openSUSE project
 + [openSUSE:Ceph](https://en.opensuse.org/openSUSE:Ceph) wiki page
-+ [Rook in Vagrant cluster](https://en.opensuse.org/openSUSE:Ceph#Using_Rook_in_Vagrant_cluster)
+  + [Rook in Vagrant cluster](https://en.opensuse.org/openSUSE:Ceph#Using_Rook_in_Vagrant_cluster)
 
 --
 
@@ -77,11 +90,17 @@
 
 + follow instruction on wiki or github to use [vagrant-ceph](https://github.com/openSUSE/vagrant-ceph)
 + box could be found in [openSUSE:Factory/openSUSE-MicroOS](https://build.opensuse.org/package/binaries/openSUSE:Factory/openSUSE-MicroOS:Kubic-kubeadm-Vagrant/images)
-+ `vagrant box add --provider libvirt --name opensuse/Kubic-kubeadm-cri-o Kubic.box`
-+ `BOX="opensuse/Kubic-kubeadm-cri-o" vagrant up`
-+ `vagrant ssh admin`
-+ `sudo su`
-+ `kubectl get nodes`
+```bash
+vagrant box add --provider libvirt --name opensuse/Kubic-kubeadm-cri-o Kubic.box
+BOX="opensuse/Kubic-kubeadm-cri-o" vagrant up
+vagrant ssh admin
+sudo su
+kubectl get nodes
+NAME    STATUS   ROLES    AGE   VERSION
+admin   Ready    master   89s   v1.14.1
+data1   Ready    <none>   47s   v1.14.1
+mon1    Ready    <none>   51s   v1.14.1
+```
 
 --
 
@@ -108,6 +127,8 @@
 
 admin#
 ```bash
+cd SUSE-rook*/cluster/examples/kubernetes/ceph/
+
 kubectl create -f common.yaml -f psp.yaml -f operator.yaml
 
 kubectl create -f cluster.yaml -f toolbox.yaml
@@ -143,11 +164,11 @@ kubectl -n rook-ceph exec $(kubectl -n rook-ceph get pod -l "app=rook-ceph-tools
 ### vagrant-ceph Rook defaults
 
 + by default it is a _tiny_ cluster from 3 nodes
-  + check _Vagrant_ file and _config.yml_ for
+  + check ``Vagrant`` file and ``config.yml`` for more options
 +  Vagrant changes default containers in yaml (image: key) to
-  + _registry.opensuse.org/filesystems/ceph/images/rook/ceph:latest_
-  + _registry.opensuse.org/filesystems/ceph/images/ceph:latest_
-+ [SUSE Rook fork](http://github.com/suse/rook) is at _github.com/suse/rook_ and _suse-master_ branch
+  + ``registry.opensuse.org/filesystems/ceph/images/rook/ceph:latest``
+  + ``registry.opensuse.org/filesystems/ceph/images/ceph:latest``
++ [SUSE Rook fork](http://github.com/suse/rook) is at ``github.com/suse/rook_ and _suse-master`` branch
 
 ---
 
@@ -223,23 +244,28 @@ openstack stack delete --yes --wait ceph-kubic
 ## other tools
 
 + [terraform-kubic-kvm](https://github.com/kubic-project/kubic-terraform-kvm)
-+ Heat is not supported on all Cloud instances
-+ HOT approach has less tools in 
++ [minikube and coreos-kubernetes fork](https://rook.io/docs/rook/v1.0/k8s-pre-reqs.html)
 
 ---
 
 ## Bugs
 
-+ bug for image
-+ bug for cloud-init
++ Some nodes in cluster don't boot
+  + [bug #1133514](https://bugzilla.opensuse.org/show_bug.cgi?id=1133514)
+  + needs SUSE [bug #1134472](https://bugzilla.suse.com/show_bug.cgi?id=1134472) to be fixed
+  + workaround images are here [home:favogt:dracutfix](https://build.opensuse.org/project/show/home:favogt:dracutfix)
++ cloud-init or SOC has some bug with routing for second interface
+  + [bug #1135792](https://bugzilla.suse.com/show_bug.cgi?id=1135792)
+  + disabled second network as workaround
 
 ---
 
 ## Contribute
 
-- https://github.com/rook/rook/ Rook
 - https://github.com/ceph/ceph Ceph
-- https://build.opensuse.org/project/show/filesystems:ceph:octopus openSUSE Ceph, Rook and other tools
+- https://github.com/rook/rook/ Rook
+- https://build.opensuse.org/project/show/filesystems:ceph OBS project
+- https://en.opensuse.org/openSUSE:Ceph wiki page
 
 
 
